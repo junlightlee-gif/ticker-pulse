@@ -60,6 +60,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .meter { display: inline-block; height: 10px; border-radius: 0 4px 4px 0; background: var(--seq); vertical-align: middle; }
 .chg-up { color: var(--up); } .chg-dn { color: var(--down); }
 .spark { vertical-align: middle; }
+.hot { color: var(--series-2); font-size: 11px; }
 .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; }
 .legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
 footer { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
@@ -75,7 +76,9 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 <div class="wrap">
 <header>
   <h1>Ticker Pulse</h1>
-  <p class="sub">US &amp; Korean stocks passing an open momentum screen, ranked by social discussion activity. Updated daily.</p>
+  <p class="sub">Two filters, one list — every stock below <b>passed a rule-based technical &amp;
+  fundamental momentum screen today</b>, and is ranked by how actively people are talking about it.
+  A <span class="hot">●</span> marks stocks with live discussion mentions today. Updated daily.</p>
   <p class="upd" id="upd"></p>
 </header>
 
@@ -84,13 +87,18 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 <div class="card scrollx">
   <h2>🇺🇸 US watchlist — ranked by StockTwits bullish messages (24h)</h2>
   <table class="wl" id="tbl-us"></table>
-  <p class="note">Bar length = today's bullish message count on StockTwits (24h). "Days listed" = consecutive days on the screen.</p>
+  <p class="note">Every row already passed today's technical &amp; fundamental screen — the ranking then adds the crowd:
+  bar length = bullish message count on StockTwits (24h). A <span class="hot">●</span> = screen pass <i>and</i> live
+  mentions today. "Days listed" = consecutive days on the screen.</p>
 </div>
 
 <div class="card scrollx">
   <h2>🇰🇷 Korea watchlist — ranked by discussion activity (24h)</h2>
   <table class="wl" id="tbl-kr"></table>
-  <p class="note">Score = posts on the stock's Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when present). Korea's list is typically short in bear markets — few stocks sit near 52-week highs.</p>
+  <p class="note">Every row already passed today's technical &amp; fundamental screen. Score = posts on the stock's
+  Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when
+  present). A <span class="hot">●</span> = screen pass <i>and</i> live mentions today. Korea's list is typically
+  short in bear markets.</p>
 </div>
 
 <div class="card">
@@ -106,9 +114,9 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 <footer>
   <h3>Methodology</h3>
   <p>Each trading day, every US-listed and KRX-listed common stock is tested against the same fixed,
-  rule-based momentum screen: price within 10% of its 52-week high, in an uptrend pullback above its
-  20-day EMA, minimum liquidity, and growing revenue &amp; earnings per the latest regulatory filings
-  (SEC for the US, DART for Korea). Stocks that pass are then ranked by social discussion activity —
+  rule-based momentum screen — a proprietary combination of technical trend criteria and fundamental
+  growth filters based on the latest regulatory filings (SEC for the US, DART for Korea); the exact
+  rules are not published. Stocks that pass are then ranked by social discussion activity —
   for the US, bullish-tagged messages on <a href="https://stocktwits.com">StockTwits</a> in the last
   24 hours; for Korea, post counts on each stock's <a href="https://finance.naver.com">Naver Finance</a>
   discussion board plus mentions of the company's English name in global financial media RSS headlines.
@@ -171,8 +179,9 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
         '<span class="' + (r.chg >= 0 ? 'chg-up' : 'chg-dn') + '">' +
         (r.chg >= 0 ? '+' : '') + r.chg.toFixed(1) + '%</span>';
       var sTxt = r.s + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
+      var hot = r.s > 0 ? ' <span class="hot" title="Passed the screen AND has discussion mentions today">●</span>' : '';
       return '<tr><td class="num">' + (i + 1) + '</td>' +
-        '<td class="tk">' + r.t + '</td><td class="nm hide-m">' + r.n + '</td>' +
+        '<td class="tk">' + r.t + hot + '</td><td class="nm hide-m">' + r.n + '</td>' +
         '<td class="num">' + sTxt + '</td>' +
         '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
         '<td class="num hide-m">' + fmtPx(r.close, cur) + '</td>' +
