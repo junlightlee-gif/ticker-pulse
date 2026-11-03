@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ticker Pulse</title>
-<meta name="description" content="Daily US momentum watchlist ranked by social discussion activity. Aggregate counts only — free and open.">
+<meta name="description" content="Daily US & Korea momentum watchlists ranked by social discussion activity. Aggregate counts only — free and open.">
 <style>
 :root {
   color-scheme: light;
   --page: #f9f9f7; --surface-1: #fcfcfb;
   --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
   --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
-  --series-1: #2a78d6; --seq: #256abf; --seq-soft: #9ec5f4;
+  --series-1: #2a78d6; --series-2: #eb6834; --seq: #256abf;
   --up: #006300; --down: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
@@ -20,7 +20,7 @@
     --page: #0d0d0d; --surface-1: #1a1a19;
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-    --series-1: #3987e5; --seq: #3987e5; --seq-soft: #1c5cab;
+    --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
     --up: #0ca30c; --down: #e66767;
   }
 }
@@ -29,7 +29,7 @@
   --page: #0d0d0d; --surface-1: #1a1a19;
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-  --series-1: #3987e5; --seq: #3987e5; --seq-soft: #1c5cab;
+  --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
   --up: #0ca30c; --down: #e66767;
 }
 * { box-sizing: border-box; }
@@ -60,6 +60,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .meter { display: inline-block; height: 10px; border-radius: 0 4px 4px 0; background: var(--seq); vertical-align: middle; }
 .chg-up { color: var(--up); } .chg-dn { color: var(--down); }
 .spark { vertical-align: middle; }
+.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; }
+.legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
 footer { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
 footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 #tt { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
@@ -73,40 +75,44 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 <div class="wrap">
 <header>
   <h1>Ticker Pulse</h1>
-  <p class="sub">US stocks passing an open momentum screen, ranked by social discussion activity. Updated daily.</p>
+  <p class="sub">US &amp; Korean stocks passing an open momentum screen, ranked by social discussion activity. Updated daily.</p>
   <p class="upd" id="upd"></p>
 </header>
 
 <div class="tiles" id="tiles"></div>
 
 <div class="card scrollx">
-  <h2>Today's watchlist — ranked by StockTwits bullish messages (24h)</h2>
-  <table id="tbl">
-    <thead><tr>
-      <th>#</th><th>Ticker</th><th class="hide-m"></th>
-      <th class="num">Bullish msgs</th><th></th>
-      <th class="num hide-m">Close</th><th class="num">1d</th>
-      <th class="num hide-m">Days listed</th><th class="hide-m">14d activity</th>
-    </tr></thead>
-    <tbody></tbody>
-  </table>
-  <p class="note">Bar length = today's bullish message count on StockTwits for that ticker (24h window). "Days listed" = consecutive days the ticker has passed the screen.</p>
+  <h2>🇺🇸 US watchlist — ranked by StockTwits bullish messages (24h)</h2>
+  <table class="wl" id="tbl-us"></table>
+  <p class="note">Bar length = today's bullish message count on StockTwits (24h). "Days listed" = consecutive days on the screen.</p>
+</div>
+
+<div class="card scrollx">
+  <h2>🇰🇷 Korea watchlist — ranked by discussion activity (24h)</h2>
+  <table class="wl" id="tbl-kr"></table>
+  <p class="note">Score = posts on the stock's Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when present). Korea's list is typically short in bear markets — few stocks sit near 52-week highs.</p>
 </div>
 
 <div class="card">
   <h2>Tickers passing the screen per day</h2>
-  <svg id="chart" width="100%" height="180" role="img" aria-label="Line chart of watchlist size per day"></svg>
-  <p class="note">Breadth gauge: how many US stocks satisfied the momentum screen each day. Hover for values.</p>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--series-1)"></span>US</span>
+    <span><span class="dot" style="background:var(--series-2)"></span>Korea</span>
+  </div>
+  <svg id="chart" width="100%" height="180" role="img" aria-label="Line chart of watchlist size per day, US and Korea"></svg>
+  <p class="note">Breadth gauge: how many stocks satisfied the momentum screen each day in each market. Hover for values.</p>
 </div>
 
 <footer>
   <h3>Methodology</h3>
-  <p>Each trading day, every US-listed common stock is tested against a fixed, rule-based momentum screen:
-  price within 10% of its 52-week high, in an uptrend pullback above its 20-day EMA, minimum liquidity,
-  and growing revenue &amp; earnings per the latest SEC filings. Stocks that pass are then ranked by
-  social discussion activity — the number of bullish-tagged messages on
-  <a href="https://stocktwits.com">StockTwits</a> in the last 24 hours. Only aggregate daily counts are
-  collected and shown; no post text or user data is stored.</p>
+  <p>Each trading day, every US-listed and KRX-listed common stock is tested against the same fixed,
+  rule-based momentum screen: price within 10% of its 52-week high, in an uptrend pullback above its
+  20-day EMA, minimum liquidity, and growing revenue &amp; earnings per the latest regulatory filings
+  (SEC for the US, DART for Korea). Stocks that pass are then ranked by social discussion activity —
+  for the US, bullish-tagged messages on <a href="https://stocktwits.com">StockTwits</a> in the last
+  24 hours; for Korea, post counts on each stock's <a href="https://finance.naver.com">Naver Finance</a>
+  discussion board plus mentions of the company's English name in global financial media RSS headlines.
+  Only aggregate daily counts are collected and shown; no post text or user data is stored.</p>
   <h3>Disclaimer</h3>
   <p>This page is a free, personal research project. Nothing here is investment advice or a recommendation
   to buy or sell any security. Data may contain errors or gaps. Do your own research.</p>
@@ -119,19 +125,20 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 (function () {
   var D = window.DASH_DATA;
   if (!D) { document.getElementById('upd').textContent = 'No data.'; return; }
+  var K = D.kr;
   document.getElementById('upd').textContent = 'Last updated: ' + D.updated +
+    (K && K.updated !== D.updated ? ' (US) / ' + K.updated + ' (KR)' : '') +
     ' · tracking since ' + D.first_day;
 
   var tiles = [
-    [D.today.length, 'stocks on today’s list'],
-    [D.n_tickers, 'tickers seen since launch'],
-    [D.n_days, 'days of history']
+    [D.today.length, 'US stocks on today’s list'],
+    [K ? K.today.length : 0, 'Korean stocks on today’s list'],
+    [Math.max(D.n_days, K ? K.n_days : 0), 'days of history']
   ];
   document.getElementById('tiles').innerHTML = tiles.map(function (t) {
     return '<div class="tile"><div class="v">' + t[0] + '</div><div class="k">' + t[1] + '</div></div>';
   }).join('');
 
-  var maxS = Math.max.apply(null, D.today.map(function (r) { return r.s; }).concat([1]));
   function spark(h) {
     if (!h || h.length < 2) return '';
     var w = 72, ht = 20, mx = Math.max.apply(null, h.concat([1]));
@@ -142,29 +149,56 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
     return '<svg class="spark" width="' + w + '" height="' + ht + '">' +
       '<polyline points="' + pts + '" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linecap="round"/></svg>';
   }
-  var tb = document.querySelector('#tbl tbody');
-  tb.innerHTML = D.today.map(function (r, i) {
-    var w = Math.max(2, Math.round(r.s / maxS * 120));
-    var chg = (r.chg === null || r.chg === undefined) ? '' :
-      '<span class="' + (r.chg >= 0 ? 'chg-up' : 'chg-dn') + '">' +
-      (r.chg >= 0 ? '+' : '') + r.chg.toFixed(1) + '%</span>';
-    return '<tr><td class="num">' + (i + 1) + '</td>' +
-      '<td class="tk">' + r.t + '</td><td class="nm hide-m">' + r.n + '</td>' +
-      '<td class="num">' + r.s + '</td>' +
-      '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
-      '<td class="num hide-m">' + (r.close === null ? '' : '$' + r.close.toFixed(2)) + '</td>' +
-      '<td class="num">' + chg + '</td>' +
-      '<td class="num hide-m">' + r.streak + '</td>' +
-      '<td class="hide-m">' + spark(r.hist) + '</td></tr>';
-  }).join('');
 
-  // ── line chart: watchlist size per day ──
-  var svg = document.getElementById('chart');
-  var days = D.days, tt = document.getElementById('tt');
+  function fmtPx(v, cur) {
+    if (v === null || v === undefined) return '';
+    return cur === 'krw' ? '₩' + Math.round(v).toLocaleString() : '$' + v.toFixed(2);
+  }
+
+  function renderTable(el, rows, msgLabel, cur) {
+    if (!rows.length) {
+      el.outerHTML = '<p class="note">No stocks passed the screen today.</p>';
+      return;
+    }
+    var maxS = Math.max.apply(null, rows.map(function (r) { return r.s; }).concat([1]));
+    var head = '<thead><tr><th>#</th><th>Ticker</th><th class="hide-m"></th>' +
+      '<th class="num">' + msgLabel + '</th><th></th>' +
+      '<th class="num hide-m">Close</th><th class="num">1d</th>' +
+      '<th class="num hide-m">Days listed</th><th class="hide-m">14d activity</th></tr></thead>';
+    var body = rows.map(function (r, i) {
+      var w = Math.max(2, Math.round(r.s / maxS * 120));
+      var chg = (r.chg === null || r.chg === undefined) ? '' :
+        '<span class="' + (r.chg >= 0 ? 'chg-up' : 'chg-dn') + '">' +
+        (r.chg >= 0 ? '+' : '') + r.chg.toFixed(1) + '%</span>';
+      var sTxt = r.s + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
+      return '<tr><td class="num">' + (i + 1) + '</td>' +
+        '<td class="tk">' + r.t + '</td><td class="nm hide-m">' + r.n + '</td>' +
+        '<td class="num">' + sTxt + '</td>' +
+        '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
+        '<td class="num hide-m">' + fmtPx(r.close, cur) + '</td>' +
+        '<td class="num">' + chg + '</td>' +
+        '<td class="num hide-m">' + r.streak + '</td>' +
+        '<td class="hide-m">' + spark(r.hist) + '</td></tr>';
+    }).join('');
+    el.innerHTML = head + '<tbody>' + body + '</tbody>';
+  }
+  renderTable(document.getElementById('tbl-us'), D.today, 'Bullish msgs', 'usd');
+  renderTable(document.getElementById('tbl-kr'), K ? K.today : [], 'Board posts', 'krw');
+
+  // ── breadth chart: US + KR series on a shared date axis ──
+  var svg = document.getElementById('chart'), tt = document.getElementById('tt');
+  var mapUS = {}, mapKR = {};
+  D.days.forEach(function (d) { mapUS[d.d] = d.n; });
+  (K ? K.days : []).forEach(function (d) { mapKR[d.d] = d.n; });
+  var dates = Object.keys(mapUS).concat(Object.keys(mapKR));
+  dates = dates.filter(function (v, i) { return dates.indexOf(v) === i; }).sort();
+
   function draw() {
     var W = svg.clientWidth || 800, H = 180, L = 34, R = 10, T = 10, B = 24;
-    var mx = Math.max.apply(null, days.map(function (d) { return d.n; }).concat([1]));
-    var x = function (i) { return L + i * (W - L - R) / Math.max(days.length - 1, 1); };
+    var vals = dates.map(function (d) { return mapUS[d] || 0; })
+      .concat(dates.map(function (d) { return mapKR[d] || 0; }));
+    var mx = Math.max.apply(null, vals.concat([1]));
+    var x = function (i) { return L + i * (W - L - R) / Math.max(dates.length - 1, 1); };
     var y = function (v) { return T + (H - T - B) * (1 - v / mx); };
     var parts = [];
     [0, 0.5, 1].forEach(function (f) {
@@ -175,34 +209,48 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
     });
     parts.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(0) + '" y2="' + y(0) +
       '" stroke="var(--baseline)" stroke-width="1"/>');
-    var step = Math.max(1, Math.ceil(days.length / 7));
-    days.forEach(function (d, i) {
-      if (i % step === 0 || i === days.length - 1) {
+    var step = Math.max(1, Math.ceil(dates.length / 7));
+    dates.forEach(function (d, i) {
+      if (i % step === 0 || i === dates.length - 1) {
         parts.push('<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' +
-          d.d.slice(5) + '</text>');
+          d.slice(5) + '</text>');
       }
     });
-    var pts = days.map(function (d, i) { return x(i).toFixed(1) + ',' + y(d.n).toFixed(1); }).join(' ');
-    parts.push('<polyline points="' + pts + '" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+    [[mapUS, 'var(--series-1)'], [mapKR, 'var(--series-2)']].forEach(function (sc) {
+      var seg = [];
+      var flush = function () {
+        if (seg.length > 1) {
+          parts.push('<polyline points="' + seg.join(' ') +
+            '" fill="none" stroke="' + sc[1] + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+        } else if (seg.length === 1) {
+          var p = seg[0].split(',');
+          parts.push('<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="' + sc[1] + '"/>');
+        }
+        seg = [];
+      };
+      dates.forEach(function (d, i) {
+        if (sc[0][d] === undefined) { flush(); return; }
+        seg.push(x(i).toFixed(1) + ',' + y(sc[0][d]).toFixed(1));
+      });
+      flush();
+    });
     parts.push('<line id="xh" y1="' + T + '" y2="' + y(0) + '" stroke="var(--baseline)" stroke-width="1" visibility="hidden"/>');
-    parts.push('<circle id="dot" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" visibility="hidden"/>');
     svg.innerHTML = parts.join('');
     svg.onmousemove = function (e) {
       var rect = svg.getBoundingClientRect();
-      var i = Math.round((e.clientX - rect.left - L) / ((W - L - R) / Math.max(days.length - 1, 1)));
-      i = Math.max(0, Math.min(days.length - 1, i));
-      var d = days[i], xh = document.getElementById('xh'), dot = document.getElementById('dot');
+      var i = Math.round((e.clientX - rect.left - L) / ((W - L - R) / Math.max(dates.length - 1, 1)));
+      i = Math.max(0, Math.min(dates.length - 1, i));
+      var d = dates[i], xh = document.getElementById('xh');
       xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
-      dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(d.n)); dot.setAttribute('visibility', 'visible');
       tt.style.display = 'block';
-      tt.innerHTML = d.d + ' · <b>' + d.n + '</b> tickers';
-      tt.style.left = Math.min(e.clientX + 12, window.innerWidth - 150) + 'px';
+      tt.innerHTML = d + ' · US <b>' + (mapUS[d] !== undefined ? mapUS[d] : '–') +
+        '</b> · KR <b>' + (mapKR[d] !== undefined ? mapKR[d] : '–') + '</b>';
+      tt.style.left = Math.min(e.clientX + 12, window.innerWidth - 190) + 'px';
       tt.style.top = (e.clientY - 34) + 'px';
     };
     svg.onmouseleave = function () {
       tt.style.display = 'none';
       document.getElementById('xh').setAttribute('visibility', 'hidden');
-      document.getElementById('dot').setAttribute('visibility', 'hidden');
     };
   }
   draw();
