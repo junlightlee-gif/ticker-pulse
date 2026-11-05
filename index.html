@@ -93,12 +93,24 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
 </div>
 
 <div class="card scrollx">
+  <h2>🇺🇸 US leaderboard — cumulative mentions, all time</h2>
+  <table class="wl" id="tbl-lead-us"></table>
+  <p class="note" id="note-lead-us"></p>
+</div>
+
+<div class="card scrollx">
   <h2>🇰🇷 Korea watchlist — ranked by discussion activity (24h)</h2>
   <table class="wl" id="tbl-kr"></table>
   <p class="note">Every row already passed today's technical &amp; fundamental screen. Score = posts on the stock's
   Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when
   present). A <span class="hot">●</span> = screen pass <i>and</i> live mentions today. Korea's list is typically
   short in bear markets.</p>
+</div>
+
+<div class="card scrollx">
+  <h2>🇰🇷 Korea leaderboard — cumulative mentions, all time</h2>
+  <table class="wl" id="tbl-lead-kr"></table>
+  <p class="note" id="note-lead-kr"></p>
 </div>
 
 <div class="card">
@@ -193,6 +205,47 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
   }
   renderTable(document.getElementById('tbl-us'), D.today, 'Bullish msgs', 'usd');
   renderTable(document.getElementById('tbl-kr'), K ? K.today : [], 'Board posts', 'krw');
+
+  function renderLead(el, noteEl, lead) {
+    if (!lead || !lead.rows || !lead.rows.length) {
+      el.outerHTML = '<p class="note">No cumulative mentions yet — the leaderboard fills in as history accrues.</p>';
+      if (noteEl) noteEl.remove();
+      return;
+    }
+    var rows = lead.rows;
+    var maxC = Math.max.apply(null, rows.map(function (r) { return r.cum; }).concat([1]));
+    var head = '<thead><tr><th>#</th><th>Ticker</th><th class="hide-m"></th>' +
+      '<th class="num">Total mentions</th><th></th>' +
+      '<th class="num hide-m">Days listed</th><th class="num hide-m">First listed</th>' +
+      '<th class="num">Since listed</th></tr></thead>';
+    var body = rows.map(function (r, i) {
+      var w = Math.max(2, Math.round(r.cum / maxC * 120));
+      var ret = (r.ret === null || r.ret === undefined) ? '' :
+        '<span class="' + (r.ret >= 0 ? 'chg-up' : 'chg-dn') + '">' +
+        (r.ret >= 0 ? '+' : '') + r.ret.toFixed(1) + '%</span>';
+      var cTxt = r.cum + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
+      return '<tr><td class="num">' + (i + 1) + '</td>' +
+        '<td class="tk">' + r.t + '</td><td class="nm hide-m">' + r.n + '</td>' +
+        '<td class="num">' + cTxt + '</td>' +
+        '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
+        '<td class="num hide-m">' + r.days + '</td>' +
+        '<td class="num hide-m">' + r.first + '</td>' +
+        '<td class="num">' + ret + '</td></tr>';
+    }).join('');
+    el.innerHTML = head + '<tbody>' + body + '</tbody>';
+    if (noteEl) {
+      var base = '';
+      if (lead.avg_talk !== null && lead.avg_zero !== null) {
+        base = ' Baseline — avg return since first listing: stocks <b>with</b> mentions ' +
+          (lead.avg_talk >= 0 ? '+' : '') + lead.avg_talk + '% (' + lead.n_talk + ' stocks) vs ' +
+          '<b>never mentioned</b> ' + (lead.avg_zero >= 0 ? '+' : '') + lead.avg_zero + '% (' + lead.n_zero + ' stocks).';
+      }
+      noteEl.innerHTML = 'Mentions accumulated across every day since tracking began; the list no longer resets daily. ' +
+        '"Since listed" = price change from the day the stock first passed the screen to the latest close.' + base;
+    }
+  }
+  renderLead(document.getElementById('tbl-lead-us'), document.getElementById('note-lead-us'), D.lead);
+  renderLead(document.getElementById('tbl-lead-kr'), document.getElementById('note-lead-kr'), K ? K.lead : null);
 
   // ── breadth chart: US + KR series on a shared date axis ──
   var svg = document.getElementById('chart'), tt = document.getElementById('tt');
