@@ -12,7 +12,7 @@
   --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
   --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
   --series-1: #2a78d6; --series-2: #eb6834; --seq: #256abf;
-  --up: #006300; --down: #d03b3b;
+  --up: #006300; --down: #d03b3b; --star: #a87900;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -21,7 +21,7 @@
     --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
     --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
-    --up: #0ca30c; --down: #e66767;
+    --up: #0ca30c; --down: #e66767; --star: #e5b53a;
   }
 }
 :root[data-theme="dark"] {
@@ -30,7 +30,7 @@
   --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
   --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
-  --up: #0ca30c; --down: #e66767;
+  --up: #0ca30c; --down: #e66767; --star: #e5b53a;
 }
 * { box-sizing: border-box; }
 body {
@@ -61,6 +61,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .chg-up { color: var(--up); } .chg-dn { color: var(--down); }
 .spark { vertical-align: middle; }
 .hot { color: var(--series-2); font-size: 11px; }
+.star { color: var(--star); font-size: 12px; }
 .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; }
 .legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
 footer { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
@@ -88,8 +89,9 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
   <h2>🇺🇸 US watchlist — ranked by StockTwits bullish messages (24h)</h2>
   <table class="wl" id="tbl-us"></table>
   <p class="note">Every row already passed today's technical &amp; fundamental screen — the ranking then adds the crowd:
-  bar length = bullish message count on StockTwits (24h). A <span class="hot">●</span> = screen pass <i>and</i> live
-  mentions today. "Days listed" = consecutive days on the screen.</p>
+  bar length = bullish message count on StockTwits (24h). A <span class="star">★</span> = entry signal fired.
+  A <span class="hot">●</span> = screen pass <i>and</i> live mentions today. "Days listed" = consecutive days on
+  the screen.</p>
 </div>
 
 <div class="card scrollx">
@@ -103,7 +105,8 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
   <table class="wl" id="tbl-kr"></table>
   <p class="note">Every row already passed today's technical &amp; fundamental screen. Score = posts on the stock's
   Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when
-  present). A <span class="hot">●</span> = screen pass <i>and</i> live mentions today. Korea's list is typically
+  present). A <span class="star">★</span> = entry signal fired. A <span class="hot">●</span> = screen pass
+  <i>and</i> live mentions today. Korea's list is typically
   short in bear markets.</p>
 </div>
 
@@ -192,8 +195,9 @@ footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
         (r.chg >= 0 ? '+' : '') + r.chg.toFixed(1) + '%</span>';
       var sTxt = r.s + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
       var hot = r.s > 0 ? ' <span class="hot" title="Passed the screen AND has discussion mentions today">●</span>' : '';
+      var star = r.star ? ' <span class="star" title="Entry signal fired — the strategy queued a buy at the next open">★</span>' : '';
       return '<tr><td class="num">' + (i + 1) + '</td>' +
-        '<td class="tk">' + r.t + hot + '</td><td class="nm hide-m">' + r.n + '</td>' +
+        '<td class="tk">' + r.t + star + hot + '</td><td class="nm hide-m">' + r.n + '</td>' +
         '<td class="num">' + sTxt + '</td>' +
         '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
         '<td class="num hide-m">' + fmtPx(r.close, cur) + '</td>' +
